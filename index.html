@@ -9,6 +9,9 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css" />
     <!-- Scroller extension CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/scroller/2.0.7/css/scroller.dataTables.min.css" />
+    <!-- DataTables Buttons CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.dataTables.min.css" />
+
     <style>
         body {
             font-family: sans-serif;
@@ -30,7 +33,7 @@
 
 <body>
 
-    <h1>Jake's Movie List</h1>
+    <h2>Jake's Movie List</h2>
     <table id="moviesTable" class="display">
         <thead>
             <tr>
@@ -40,6 +43,18 @@
                 <th>Rating</th>
                 <th>Votes</th>
                 <th>Directors</th>
+                <th>Actors</th>
+                <th>Actresses</th>
+            </tr>
+            <tr class="filter-row">
+                <td><input type="text" placeholder="Search Title" /></td>
+                <td><input type="text" placeholder="Search Year" /></td>
+                <td><input type="text" placeholder="Search Genre" /></td>
+                <td><input type="text" placeholder="Search Rating" /></td>
+                <td><input type="text" placeholder="Search Votes" /></td>
+                <td><input type="text" placeholder="Search Directors" /></td>
+                <td><input type="text" placeholder="Search Actors" /></td>
+                <td><input type="text" placeholder="Search Actresses" /></td>
             </tr>
         </thead>
         <tbody></tbody>
@@ -48,8 +63,14 @@
     <!-- jQuery + DataTables core JS -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+
     <!-- Scroller extension JS -->
     <script src="https://cdn.datatables.net/scroller/2.0.7/js/dataTables.scroller.min.js"></script>
+
+    <!-- Buttons extension JS (after DataTables core!) -->
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
+
     <!-- PapaParse for CSV parsing -->
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
 
@@ -71,8 +92,24 @@
                     $('#moviesTable').DataTable({
                         data: allData,           // pass in the full data array
                         deferRender: true,       // only render visible rows
-                        scrollY: '65vh',         // viewport height for the table body
-                        scroller: true,          // enable the Scroller extension
+                        scrollY: '60vh',          // viewport height for the table body
+                        scrollX: true,
+                        scroller: true,         // enable the Scroller extension
+                        orderCellsTop: true,
+                        dom: 'Bfrtip',         // <-- place Buttons (“B”) before the table (“frtip”)
+                        buttons: [
+                            {
+                                extend: 'csvHtml5',
+                                text: 'Export CSV',
+                                filename: 'movies_export',  // name of the downloaded file (without .csv)
+                                exportOptions: {
+                                    columns: ':visible',      // only visible columns
+                                    modifier: {
+                                        search: 'applied'       // only rows matching the current search/filter
+                                    }
+                                }
+                            }
+                        ],
                         pageLength: 25,          // still can page if you want
                         order: [[3, 'desc']],    // default sort by Rating
                         columns: [
@@ -81,8 +118,26 @@
                             { data: 'genres' },
                             { data: 'averageRating' },
                             { data: 'numVotes' },
-                            { data: 'directors' }
-                        ]
+                            { data: 'directors' },
+                            { data: 'actorNames' },
+                            { data: 'actressNames' }
+                        ],
+                        initComplete: function () {
+                            // 'this.api()' is the DataTable instance
+                            this.api().columns().every(function (idx) {
+                                // find the input in the second header row for this column
+                                var column = this;
+                                var input = $('thead .filter-row td').eq(idx).find('input');
+
+                                // on input change, trigger column search
+                                input.on('keyup change clear', function () {
+                                    var val = this.value;
+                                    column
+                                        .search(val)   // apply search to this column
+                                        .draw();       // redraw table
+                                });
+                            });
+                        }
                     });
                 }
             });
