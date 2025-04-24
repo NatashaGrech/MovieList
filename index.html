@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Jake's Movie List</title>
+    <link rel="icon" href="television.png" />
+    <!-- DataTables core CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css" />
+    <!-- Scroller extension CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/scroller/2.0.7/css/scroller.dataTables.min.css" />
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 1em;
+        }
+
+        table {
+            width: 100%;
+        }
+
+        th,
+        td {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Jake's Movie List</h1>
+    <table id="moviesTable" class="display">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Year</th>
+                <th>Genre</th>
+                <th>Rating</th>
+                <th>Votes</th>
+                <th>Directors</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <!-- jQuery + DataTables core JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <!-- Scroller extension JS -->
+    <script src="https://cdn.datatables.net/scroller/2.0.7/js/dataTables.scroller.min.js"></script>
+    <!-- PapaParse for CSV parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // 1) We'll collect all rows here
+            const allData = [];
+
+            // 2) Parse CSV in one go (or chunked if you like), filling allData
+            Papa.parse("movies.csv", {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: function (results) {
+                    // store parsed rows
+                    allData.push(...results.data);
+
+                    // 3) Initialize DataTable with Scroller
+                    $('#moviesTable').DataTable({
+                        data: allData,           // pass in the full data array
+                        deferRender: true,       // only render visible rows
+                        scrollY: '75vh',         // viewport height for the table body
+                        scroller: true,          // enable the Scroller extension
+                        pageLength: 25,          // still can page if you want
+                        order: [[3, 'desc']],    // default sort by Rating
+                        columns: [
+                            { data: 'primaryTitle' },
+                            { data: 'startYear' },
+                            { data: 'genres' },
+                            { data: 'averageRating' },
+                            { data: 'numVotes' },
+                            { data: 'directors' }
+                        ]
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
